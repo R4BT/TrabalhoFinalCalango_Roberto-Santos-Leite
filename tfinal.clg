@@ -1,0 +1,1168 @@
+algoritmo Jogo_da_Sorte;
+// Síntese
+//  Objetivo:SIMULAR UM JOGO DE TABULEIRO DE 33 CASAS
+//  Entrada : PREPARAR QUANTIDADE DE JOGADORES E O NOME DESSES JOGADORES, E DEPOIS RESPONDER OS DESAFIOS E RELAICIONARI COM O TABULEIRO
+//  Saída  : SAO AS AS CASAS QUE CONTEM INSTRCUCOES PROS JOGADORES JOGAREM E AO FINAL UMA TELA COM OS VENCEDORES E PERDEDORES;
+
+
+principal
+//Declarações de variavéis
+	texto nome[6],resp2;
+	inteiro qntd_jog, i, j, cont_de_rod, valida_resp, menu, pos[6],pontos[6], banana[6], num, elim[6],vit[6], dado;
+
+//Instruçoes
+	faca
+		mainMenu();
+		leia(menu);
+		limpaTela();
+		escolha (menu)
+		caso 1
+			//QUANTOS JOGADORES VAO JOGAR E QUAL O NOME DE CADA UM
+			escreval("Quantos jogadores vão jogar (mín. de 2, max de 6)");
+			leia(qntd_jog);
+			limpaTela();
+			se(qntd_jog <2 ou qntd_jog > 6)entao
+				escreval(" ERRO-numero de jogadores não é válido");
+				escreva("digite número de jogadores correto");
+				leia(qntd_jog);
+				limpaTela();
+			fimSe
+			para(i de 0 ate qntd_jog-1 passo 1)faca
+				escreval("Nome do player ",i+1,":");
+				leia(nome[i]);
+				limpaTela();
+			fimPara
+			prep_inicio(pos,pontos,banana,elim,vit);//ZERANDO OS VETORES
+			para(cont_de_rod de 1 ate 33 passo 1)faca
+				escreval("            INICIO DA RODADA ",cont_de_rod);
+				se(valida_game_over(qntd_jog, pontos, elim, vit)==0)entao//VERIFICANDO SE ALGUEM JA GANHOU OU SE APENAS RESTOU UM JOGANDO E OS OUTROS PERDERAM
+					para(j de 0 ate qntd_jog-1 passo 1)faca
+						se (elim[j]== 0)entao
+							faca
+								valida_resp =1;
+								faca
+									escreval("VEZ DO PLAYER ",(j+1)," ",nome[j]);
+									turnoMenu();
+									leia(menu);
+									limpaTela();
+									escolha (menu)
+									caso 1 //JOGAR OS DADOS E IR PARA ALGUMA CASA
+											dado = dados();
+											pos[j]=pos[j]+dado;
+											escreval("O jogador tirou ",dado," nos dados e vai para a casa ",pos[j]);
+											casa(pos[j],j,pontos,elim, vit,banana);//VAI PRINTAR A CASA COM AS SUAS RESPECTIVAS INSTRUCOES
+											escreval("Press enter to continue");
+											leia(resp2);
+											limpaTela();
+										interrompa;
+									caso 2 // ELIMINAR UM JOGADOR MANUALMENTE
+										escreval("qual o numero do jogador que gostaria de eliminar?");
+										leia(num);
+										se(num>=1 e num<=qntd_jog )entao
+											se(elim[num-1]==0)entao
+												elim[num-1]=1;
+											senao
+												escreval("Jogador já está fora do jogo");
+											fimSe
+										senao
+											escreval("numero invalido");
+										fimSe
+										limpaTela();
+										interrompa;
+									caso 3 // VER AS ESTATISTICAS DA PARTIDA ATE AQUELE MOMENTO
+										stats(qntd_jog,nome,pos,pontos,banana,elim);
+										leia(resp2);
+										limpaTela();
+										interrompa;
+									outroCaso
+										escreval("RESPOSTA INVÁLIDA");
+										valida_resp=0;
+									fimEscolha
+								enquanto(menu!=1);//SO PASSA PARA O PROXIMO JOGADOR DEPOIS QUE O JOGADOR DA VEZ JOGAR OS DADOS
+							enquanto(valida_resp==0);
+						fimSe
+					fimPara
+				senao
+					limpaTela();
+					telaFinal(qntd_jog, nome,vit, pos, pontos, banana, elim);
+				fimSe
+			fimPara
+			interrompa;
+		caso 2 //AS REGRAS
+			escreval("RULES:");
+			escreval("O jogo é bem simples:");
+			escreval("Jogue os dados e ande a quantidade que sair nos dados até uma casa.");
+			escreval("Ao chegar nessa casa leia as instruções que estão nela. Se uma casa");
+			escreval("fizer voce perder, voce perde! Se uma casa faz com que voce ganhe, ");
+			escreval("ao final da rodada voce ganha. Alem dessas casas, ganha quem acumular");
+			escreval("15 pontos primeiro. Esses pontos são adquiridos nas casas e por desafios.");
+			escreval("------------------------------------------------------------------------");
+			escreval("      AGORA   VOCE   ESTA   PRONTO   PARA   COMECAR   A    JOGAR        ");
+			leia(resp2);
+			limpaTela(); 
+			interrompa;
+		caso 3 //CREDITOS E EXIT
+			escreval(" ___________________________");
+			escreval("|  Creditos : Roberto Leite |");
+			escreval("|Trabalho de APC no calango |");
+			escreval("|___________________________|");
+			escreval("|                           |");
+			escreval("|---------GAME OVER---------|");
+			escreval("|___________________________|");
+			interrompa;
+		outroCaso
+			escreval("ERRO - Numero invalido.");
+			interrompa;
+		fimEscolha
+	enquanto(menu!=3 e menu!=1);//ENQUANTO NAO SAIR PELO EXIT(menu==3) OU JOGAR(menu==1)ELE VAI CONTINUAR RODANDO O mainMenu
+fimPrincipal
+
+
+
+//PROCEDIMENTO PARA GERAR O MENU PRINCIPAL
+
+procedimento mainMenu()
+	escreval("Escolha a ação a tomar");
+	escreval(" Digite:");
+	escreval("            1- INICIAR UMA NOVA PARTIDA");
+	escreval("            2- AS REGRAS");
+	escreval("            3- EXIT");
+fimProcedimento
+
+
+
+//PROCEDIMENTO PARA GERAR O MENU DO TURNO DO JOGADOR
+
+procedimento turnoMenu()
+	escreval("Escolha a ação a tomar");
+	escreval(" Digite:");
+	escreval("            1- JOGAR OS DADOS");
+	escreval("            2- ELIMINAR ALGUM JOGADOR MANUALMENTE");
+	escreval("            3- VER AS  ESTATISTICAS DA PARTIDA");
+fimProcedimento
+
+
+
+//PROCEDIMENTO PARA GERAR AS ESTATISTICAS DA PARTIDA
+
+procedimento stats(inteiro qntd_jog,texto nome[], inteiro pos[], inteiro pontos[], inteiro banana[],inteiro elim[])
+	inteiro i;
+	para( i de 0 ate qntd_jog-1 passo 1)faca
+		escreval(nome[i]);
+		se(elim[i]==1)entao
+			escreval("ELIMINADO");
+		fimSe
+		escreval("Pontos : ", pontos[i]);
+		escreval("Casa : ", pos[i]);
+		se(banana[i]!=0)entao
+			escreval("Bananas : ", banana[i]);
+		fimSe
+		escreval("");
+	fimPara
+fimProcedimento
+
+
+
+//PROCEDIMENTO PARA GERAR A TELA FINAL COM GANHADORES E PERDEDORES
+
+procedimento telaFinal(inteiro qntd_jog,texto nome[],inteiro vit[], inteiro pos[], inteiro pontos[], inteiro banana[],inteiro elim[])
+	inteiro i;
+	escreval(" ___________________________");
+	escreval("|       --GAME OVER--       |");
+	escreval("|___________________________|");
+	escreval("|         GANHADORES        |");
+	para( i de 0 ate qntd_jog-1 passo 1)faca
+		se(vit[i]==1)entao
+			escreval("|",nome[i]);
+			escreval("|Pontos : ", pontos[i],"                 |");
+			escreval("|Casa : ", pos[i],"                |");
+			se(banana[i]!=0)entao
+				escreval("|Bananas : ", banana[i],"                |");
+			fimSe
+			escreval("|                           |");
+		fimSe
+	fimPara
+	escreval("|___________________________|");
+	escreval("|        PERDEDORES         |");
+	para( i de 0 ate qntd_jog-1 passo 1)faca
+		se(vit[i]==0)entao
+			escreval("|",nome[i]);
+			escreval("|Pontos : ", pontos[i],"                 |");
+			escreval("|Casa : ", pos[i],"                |");
+			se(banana[i]!=0)entao
+				escreval("|Bananas : ", banana[i],"                |");
+			fimSe
+			escreval("|                           |");
+		fimSe
+	fimPara
+	escreval("|___________________________|");
+fimProcedimento
+
+
+
+//FUNCAO PARA SIMULAR A JOGADA DE UM DADO
+
+funcao inteiro dados()
+	inteiro d;
+	d = aleatorio(5) + 1;
+	retorna d;
+fimFuncao
+
+
+
+//FUNCAO PARA ZERAR TODOS OS VETORES
+
+procedimento prep_inicio( inteiro vet[], inteiro vet2[], inteiro vet3[], inteiro vet4[], inteiro vet5[])
+	inteiro i;
+	para ( i de 0 ate 5 passo 1) faca
+		vet[i]=0;
+		vet2[i]=0;
+		vet3[i]=0;
+		vet4[i]=0;
+		vet5[i]=0;
+	fimPara
+fimProcedimento
+
+
+
+//FUNCAO PARA VERIFICAR SE ALGUEM GANHOU O JOGO OU SE TODOS JA PERDERAM E SO RESTOU O VENCEDOR
+
+funcao inteiro valida_game_over(inteiro qntd_jog, inteiro pontos[],inteiro elim[], inteiro vit[])
+	inteiro soma_vit, soma_elim, cont,cont2, ver;
+
+	soma_vit=0;
+	soma_elim=0;
+	ver=0;
+	para(cont de 0 ate qntd_jog-1 passo 1)faca
+		se(pontos[cont]>=15)entao
+			vit[cont]=1;
+		fimSe
+		soma_vit = soma_vit + vit[cont];
+		soma_elim= soma_elim + elim[cont];
+	fimPara
+
+	se(soma_elim>=qntd_jog-1)entao
+		para(cont2 de 0 ate qntd_jog-1 passo 1)faca
+			se(elim[cont2]==0)entao
+				vit[cont2]=1;
+			fimSe
+		fimPara
+		ver=1;
+	fimSe
+
+	se(soma_vit>=1)entao
+		ver=1;
+	fimSe
+
+	retorna ver;
+fimFuncao
+
+
+
+//FUNCAO COM O QUE CADA CASA FAZ - DESAFIOS, ELIMINAÇÕES,  VITORIAS E PONTOS
+
+procedimento casa(inteiro n, inteiro nj, inteiro pontos[], inteiro elim[], inteiro vit[],inteiro banana[])
+	inteiro resp1,resp2, cont;
+	caracter c;
+
+	escreval("CASA ",n);
+	escolha (n)
+	caso 1
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|________SEM MIRAR__________|");
+		escreval("	|                           |");
+		escreval("	|Arremesse o que tiver nas  |");
+		escreval("	|maos em alguem perto de vc.|");
+		escreval("	|                           |");
+		escreval("	|Se voce acertar, voce ganha|");
+		escreval("	|+5 pontos.                 |");
+		escreval("	|                           |");
+		escreval("	|Se voce errar, voce eh ruim|");
+		escreval("	|na vida real e no jogo e   |");
+		escreval("	|perde.                     |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|'Nao!Eu disse sua de suar' |");
+		escreval("	|                           |");
+		escreval("	|___________________________|");
+		escreval("");
+		escreval("Voce conseguiu ?(s ou n)");
+		leiaCaracter(c);
+		se(c=='s' ou c=='S')entao
+			escreval("Parabens voce ganhou +5 pontos.");
+			pontos[nj] = pontos[nj]+5;
+		senao
+			escreval("Voce perdeu");
+			elim[nj] =1;
+		fimSe
+		interrompa;
+	caso 2
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|___________VOCE____________|");
+		escreval("	|                           |");
+		escreval("	|Leia em voz alta :         |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|Qualquer jogador que falar |");
+		escreval("	|voce, seu/sua ou seus/suas |");
+		escreval("	|perde imediatamente,       |");
+		escreval("	|a partir de agora.         |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|'Nao!Eu disse sua de suar' |");
+		escreval("	|                           |");
+		escreval("	|___________________________|");
+		interrompa;
+	caso 3
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|____________EU_____________|");
+		escreval("	|                           |");
+		escreval("	|Leia em voz alta :         |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|Qualquer jogador que falar |");
+		escreval("	|Eu, Meu e Minha perderá    |");
+		escreval("	|imediatamente, começando   |");
+		escreval("	|agora.                     |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|Eu acho que este eh meu mel|");
+		escreval("	|         favorito          |");
+		escreval("	|___________________________|");
+		interrompa;
+	caso 4
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|_______BURACO NEGRO________|");
+		escreval("	|                           |");
+		escreval("	|Se vc nasceu nos meses de  |");
+		escreval("	|janeiro até junho, um      |");
+		escreval("	|buraco negro aparecerá e   |");
+		escreval("	|sugará você! Você perde.   |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|'Buracos negros não sugam, |");
+		escreval("	|eles deformam o espaço e o |");
+		escreval("	|tempo!'certo,sr. engenheiro|");
+		escreval("	|quem suga é você,otário.   |");
+		escreval("	|___________________________|");
+		escreval("");
+		escreval("Vc nasceu entre jan e jun?(s ou n)");
+		leiaCaracter(c);
+		se(c=='S' ou c=='s')entao
+			escreval("Voce perdeu");
+			elim[nj]=1;
+		fimSe
+		interrompa;
+	caso 12
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|___________LASERS__________|");
+		escreval("	|                           |");
+		escreval("	|Escolha um jogador para ser|");
+		escreval("	|queimado por um gigantesco |");
+		escreval("	|laser vermelho.            |");
+		escreval("	|                           |");
+		escreval("	|Ele pega fogo e perde.     |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|    Esta quente aqui,      |");
+		escreval("	|     ou eh so voce? ;)     |");
+		escreval("	|___________________________|");
+		escreval("");
+		escreval("Qual o numero do jogador que vc vai eliminar");
+		leia(resp1);
+		elim[resp1-1]=1;
+		interrompa;
+	caso 26
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|_________VOCE VENCEU_______|");
+		escreval("	|                           |");
+		escreval("	|Voce vence... Se voce for  |");
+		escreval("	|a pessoa mais baixa ainda  |");
+		escreval("	|em jogo.                   |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|Caso contrário voce ganha  |");
+		escreval("	|+5 pontos.                 |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|   Eu sou apenas alguns    |");
+		escreval("	|   centimetros maior :(    |");
+		escreval("	|___________________________|");
+		escreval("");
+		escreval("Voce eh a pessoa mais baixa ainda em jogo?(s ou n)");
+		leiaCaracter(c);
+		se(c=='s' ou c=='S')entao
+			escreval("Parabens voce vence no final da rodada");
+			vit[nj]=1;
+		senao
+			escreval("Parabens vc ganhou +5 pontos");
+			pontos[nj] = pontos[nj]+5;
+		fimSe
+		interrompa;
+	caso 7
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|_________VOCE VENCEU_______|");
+		escreval("	|                           |");
+		escreval("	|Voce vence... Se voce for  |");
+		escreval("	|a unica garota que restou  |");
+		escreval("	|no jogo.                   |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|Caso contrário voce ganha  |");
+		escreval("	|+5 pontos.                 |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|   Eu sou apenas alguns    |");
+		escreval("	|   centimetros maior :(    |");
+		escreval("	|___________________________|");
+		escreval("");
+		escreval("Voce eh a unica garota ainda em jogo?(s ou n)");
+		leiaCaracter(c);
+		se(c=='s' ou c=='S')entao
+			escreval("Parabens voce vence no final da rodada");
+			vit[nj]=1;
+		senao
+			escreval("Parabens vc ganhou +5 pontos");
+			pontos[nj] = pontos[nj]+5;
+		fimSe
+		interrompa;
+	caso 25
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|_________VOCE VENCEU_______|");
+		escreval("	|                           |");
+		escreval("	|Voce vence... Se no momento|");
+		escreval("	|estiver chovendo la fora.  |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|Caso contrário voce ganha  |");
+		escreval("	|+5 pontos.                 |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|   Eu sou apenas alguns    |");
+		escreval("	|   centimetros maior :(    |");
+		escreval("	|___________________________|");
+		escreval("");
+		escreval("Ta chovendo la fora?(s ou n)");
+		leiaCaracter(c);
+		se(c=='s' ou c=='S')entao
+			escreval("Parabens voce vence no final da rodada");
+			vit[nj]=1;
+		senao
+			escreval("Parabens vc ganhou +5 pontos");
+			pontos[nj] = pontos[nj]+5;
+		fimSe
+		interrompa;
+	caso 9
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|_________FEMINISMO_________|");
+		escreval("	|                           |");
+		escreval("	|   Mulheres  assumem  o    |");
+		escreval("	|controle.                  |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|Todos  os  homens  perdem  |");
+		escreval("	|imediatamente.             |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|         'sua mae!'        |");
+		escreval("	|                           |");
+		escreval("	|___________________________|");
+		escreval("");
+		escreval("Quantas pessoas sao homens?");
+		leia(resp1);
+		para(cont de 1 ate resp1 passo 1)faca
+			escreval("Qual o numero do ", cont," homem?");
+			leia(resp2);
+			elim[resp2-1]=1;
+		fimPara
+		interrompa;
+	caso 10
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|_________MACHISMO__________|");
+		escreval("	|                           |");
+		escreval("	|Homens assumem o controle. |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|Todos  as mulheres  perdem |");
+		escreval("	|imediatamente.             |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|  Essa casa pode causar    |");
+		escreval("	|    muitos problemas.      |");
+		escreval("	|___________________________|");
+		escreval("");
+		escreval("Quantas pessoas sao mulheres?");
+		leia(resp1);
+		para(cont de 1 ate resp1 passo 1)faca
+			escreval("Qual o numero da ", cont," mulher?");
+			leia(resp2);
+			elim[resp2-1]=1;
+		fimPara
+		interrompa;
+	caso 11
+		escreval("	 ____________________________");
+		escreval("	|                            |");
+		escreval("	|________MALABARISTA_________|");
+		escreval("	|                           |");
+		escreval("	|Tente fazer malabarismo com |");
+		escreval("	|tres objetos que os outros  |");
+		escreval("	|jogadores escolherem.       |");
+		escreval("	|                            |");
+		escreval("	|                            |");
+		escreval("	|Se  voce  conseguir  ganhe  |");
+		escreval("	|+5 pontos.                  |");
+		escreval("	|                            |");
+		escreval("	|                            |");
+		escreval("	|----------------------------|");
+		escreval("	|Foi mal eu ja tava sem ideia|");
+		escreval("	|quando eu pensei nisso aqui.|");
+		escreval("	|____________________________|");
+		escreval("");
+		escreval("Voce conseguiu?(s ou n)");
+		leiaCaracter(c);
+		se(c=='s' ou c=='S')entao
+			escreval("Parabens voce ganhou +5 pontos");
+			pontos[nj]=pontos[nj]+5;
+		fimSe
+		interrompa;
+	caso 33
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|___________PIZZA___________|");
+		escreval("	|                           |");
+		escreval("	|Ligue para uma pizzaria e  |");
+		escreval("	|tente  desabafar  com  o   |");
+		escreval("	|atendente sobre a sua vida |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|Se  voce  conseguir  ganhe |");
+		escreval("	|+5 pontos.                 |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	| cogumelos verdes nao sao  |");
+		escreval("	|     inclusos no jogo.     |");
+		escreval("	|___________________________|");
+		escreval("");
+		escreval("Voce fez?(s ou n)");
+		leiaCaracter(c);
+		se(c=='s' ou c=='S')entao
+			escreval("Parabens voce ganhou +5 pontos");
+			pontos[nj]=pontos[nj]+5;
+		fimSe
+		interrompa;
+	caso 5
+		escreval("	 ____________________________");
+		escreval("	|                            |");
+		escreval("	|____________BEBE____________|");
+		escreval("	|                            |");
+		escreval("	|Fale  com  voz de bebe ate o|");
+		escreval("	|final do jogo.              |");
+		escreval("	|                            |");
+		escreval("	|                            |");
+		escreval("	|                            |");
+		escreval("	|                            |");
+		escreval("	|                            |");
+		escreval("	|----------------------------|");
+		escreval("	|      Bebes sao fofos       |");
+		escreval("	| Pessoas imitando bebes nao.|");
+		escreval("	|____________________________|");
+		interrompa;
+	caso 14
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|__________STALKER__________|");
+		escreval("	|                           |");
+		escreval("	|Curta  os  5  posts  mais  |");
+		escreval("	|antigos da primeira pessoa |");
+		escreval("	|que aparecer no seu feed do|");
+		escreval("	|Instagram.                 |");
+		escreval("	|                           |");
+		escreval("	|Se   voce   fizer   ganhe  |");
+		escreval("	|+5 pontos.                 |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|Essa é com  certeza  minha |");
+		escreval("	|maior vigarice. HAHAHA!    |");
+		escreval("	|___________________________|");
+		escreval("");
+		escreval("Voce fez?(s ou n)");
+		leiaCaracter(c);
+		se(c=='s' ou c=='S')entao
+			escreval("Parabens voce ganhou +5 pontos");
+			pontos[nj]=pontos[nj]+5;
+		fimSe
+		interrompa;
+	caso 28
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|__________PEIXES___________|");
+		escreval("	|                           |");
+		escreval("	|Finja que voce é um peixe  |");
+		escreval("	|fora da agua se debatendo. |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|Se   voce   fizer   ganhe  |");
+		escreval("	|+5 pontos.                 |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	| cogumelos verdes nao sao  |");
+		escreval("	|     inclusos no jogo.     |");
+		escreval("	|___________________________|");
+		escreval("");
+		escreval("Voce conseguiu?(s ou n)");
+		leiaCaracter(c);
+		se(c=='s' ou c=='S')entao
+			escreval("Parabens voce ganhou +5 pontos");
+			pontos[nj]=pontos[nj]+5;
+		fimSe
+		interrompa;
+	caso 16
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|______AMIGO DE MERDA_______|");
+		escreval("	|                           |");
+		escreval("	|Ligue para um amigo que nao|");
+		escreval("	|esta  fazendo  aniversario |");
+		escreval("	|para dar os parabéns.      |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|Se   voce   fizer   ganhe  |");
+		escreval("	|+5 pontos.                 |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|Se voce ainda nao descobriu|");
+		escreval("	|quem eh o amigo de merda do|");
+		escreval("	|seu grupo, é porque o amigo|");
+		escreval("	|de merda eh voce!          |");
+		escreval("	|___________________________|");
+		escreval("");
+		escreval("Voce conseguiu?(s ou n)");
+		leiaCaracter(c);
+		se(c=='s' ou c=='S')entao
+			escreval("Parabens voce ganhou +5 pontos");
+			pontos[nj]=pontos[nj]+5;
+		fimSe
+		interrompa;
+	caso 17
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|__________BANANA___________|");
+		escreval("	|                           |");
+		escreval("	|Parabéns!!!                |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|Voce agora tem uma banana! |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|    Isso pode ser util...  |");
+		escreval("	|       Algum dia...        |");
+		escreval("	|         Talvez.           |");
+		escreval("	|___________________________|");
+		banana[nj]=banana[nj]+1;
+		escreval("TOTAL DE BANANAS = ",banana[nj]);
+		interrompa;
+	caso 23
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|___________PONTOS__________|");
+		escreval("	|                           |");
+		escreval("	|Esta carta vale + 8 pontos,|");
+		escreval("	|se voce for homem,e +3     |");
+		escreval("	|pontos se voce nao for.    |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|Qualquer jogador que chegar|");
+		escreval("	|a 15 pontos ganha!         |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|'Que comece o patriarcado' |");
+		escreval("	|                           |");
+		escreval("	|___________________________|");
+		escreval("Voce é homem?(s ou n)");
+		leiaCaracter(c);
+		se(c=='s' ou c=='S')entao
+			pontos[nj]=pontos[nj]+8;
+			escreval("Parabens vc ganhou +8 pontos");
+		senao
+			pontos[nj]=pontos[nj]+3;
+			escreval("Paravens vc ganhou +3 pontos");
+		fimSe
+		interrompa;
+	caso 19
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|___________PONTOS__________|");
+		escreval("	|                           |");
+		escreval("	|Esta carta vale + 8 pontos,|");
+		escreval("	|se voce for mulher,e +3    |");
+		escreval("	|pontos se voce nao for.    |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|Qualquer jogador que chegar|");
+		escreval("	|a 15 pontos ganha!         |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|'Que comece o matriarcado' |");
+		escreval("	|                           |");
+		escreval("	|___________________________|");
+		escreval("Voce é mulher?(s ou n)");
+		leiaCaracter(c);
+		se(c=='s' ou c=='S')entao
+			pontos[nj]=pontos[nj]+8;
+			escreval("Parabens vc ganhou +8 pontos");
+		senao
+			pontos[nj]=pontos[nj]+3;
+			escreval("Paravens vc ganhou +3 pontos");
+		fimSe
+		interrompa;
+	caso 20
+		escreval("	 ____________________________");
+		escreval("	|                            |");
+		escreval("	|______FACA DE COZINHA_______|");
+		escreval("	|                            |");
+		escreval("	|Mate  um  Jogador  com  uma |");
+		escreval("	|faca de cozinha afiada. Ele |");
+		escreval("	|morre e perde.              |");
+		escreval("	|                            |");
+		escreval("	|Ou, venda  a  faca  para  um|");
+		escreval("	|chef e ganhe +14 pontos.    |");
+		escreval("	|                            |");
+		escreval("	|Qualquer jogador que chegar |");
+		escreval("	|a 15 pontos ganha!          |");
+		escreval("	|                            |");
+		escreval("	|----------------------------|");
+		escreval("	|    Facas de cozinha são    |");
+		escreval("	|  ferramentas úteis para    |");
+		escreval("	|cortar carne.Só pra vc saber|");
+		escreval("	|____________________________|");
+		escreval("Voce quer matar um jogador com a faca?(s ou n)");
+		leiaCaracter(c);
+		se(c=='s' ou c=='S')entao
+			escreval("Qual o numero do jogador que vc deseja matar?");
+			leia(resp1);
+			elim[resp1-1]=1;
+			escreval("FEITO! UFA.");
+		senao
+			escreval("Voce vendeu a faca para um chef suico e ganhou +14 pontos");
+			pontos[nj]=pontos[nj]+14;
+		fimSe
+		interrompa;
+	caso 21
+		escreval("	 ____________________________");
+		escreval("	|                            |");
+		escreval("	|________BOLO OU MORTE_______|");
+		escreval("	|                            |");
+		escreval("	|Todos os jogadores menos vc |");
+		escreval("	|devem escolher entre Bolo e |");
+		escreval("	|Morte.                      |");
+		escreval("	|                            |");
+		escreval("	|*Se a maioria for Morte...  |");
+		escreval("	|                            |");
+		escreval("	|                            |");
+		escreval("	|*Se a maioria for Bolo...   |");
+		escreval("	|                            |");
+		escreval("	|                            |");
+		escreval("	|*Se der empate, voce vence. |");
+		escreval("	|                            |");
+		escreval("	|                            |");
+		escreval("	|----------------------------|");
+		escreval("	| Então né... foices não são |");
+		escreval("	|  muito recomendadas para   |");
+		escreval("	|  cortar ou servir bolos... |");
+		escreval("	|____________________________|");
+		escreval("A maioria escolheu Morte?(s ou n)");
+		leiaCaracter(c);
+		se(c=='s' ou c=='S')entao
+			elim[nj]=1;
+			escreval("No final da rodada vc perde");
+		senao
+			escreval("A maioria escolheu Bolo?(s ou n)");
+			leiaCaracter(c);
+			se(c=='s' ou c=='S')entao
+				escreval("Todo mundo que escolheu Morte perde");
+				escreval("Quantas pessoas escolheram Morte?");
+				leia(resp1);
+				para(cont de 1 ate resp1 passo 1)faca
+					escreval("Qual o numero da ", cont," pessoa que escolheu Morte?");
+					leia(resp2);
+					elim[resp2-1]=1;
+				fimPara
+			senao
+				escreval("No final da rodada vc ganha");
+				vit[nj]=1;
+			fimSe
+		fimSe
+		interrompa;
+	caso 22
+		escreval("	 ____________________________");
+		escreval("	|                            |");
+		escreval("	|________BOLO OU MORTE_______|");
+		escreval("	|                            |");
+		escreval("	|Todos os jogadores menos vc |");
+		escreval("	|devem escolher entre Bolo e |");
+		escreval("	|Morte.                      |");
+		escreval("	|                            |");
+		escreval("	|*Se a maioria for Morte ... |");
+		escreval("	|                            |");
+		escreval("	|                            |");
+		escreval("	|*Se a maioria for Bolo ...  |");
+		escreval("	|                            |");
+		escreval("	|                            |");
+		escreval("	|*Se der empate, todo mundo  |");
+		escreval("	|ganha bolo!(mentira)        |");
+		escreval("	|                            |");
+		escreval("	|----------------------------|");
+		escreval("	|  A ideia mais criativa que |");
+		escreval("	|   alguma vez ja existiu!   |");
+		escreval("	|____________________________|");
+		escreval("A maioria escolheu Morte?(s ou n)");
+		leiaCaracter(c);
+		se(c=='s' ou c=='S')entao
+			vit[nj]=1;
+			escreval("No final da rodada vc ganha");
+		senao
+			escreval("A maioria escolheu Bolo?(s ou n)");
+			leiaCaracter(c);
+			se(c=='s' ou c=='S')entao
+				escreval("Todo mundo que escolheu Morte ganha");
+				escreval("Quantas pessoas escolheram Morte?");
+				leia(resp1);
+				para(cont de 1 ate resp1 passo 1)faca
+					escreval("Qual o numero da ", cont," pessoa que escolheu Morte?");
+					leia(resp2);
+					vit[resp2-1]=1;
+				fimPara
+			senao
+				escreval("Todo mundo ganha bolo!(mentira)");
+			fimSe
+		fimSe
+		interrompa;
+	caso 18
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|___________NUMEROS_________|");
+		escreval("	|                           |");
+		escreval("	|Leia em voz alta :         |");
+		escreval("	|                           |");
+		escreval("	|  'Voce deve digitar um    |");
+		escreval("	|     numero de 1 a 20'     |");
+		escreva("	|");
+		leia(resp1);
+		se (resp1==2 ou resp1==3 ou resp1==5 ou resp1==7 ou resp1==11 ou resp1==13 ou resp1==17 ou resp1==19)entao
+			escreval("	|                           |");
+			escreval("	|   O numero é primo entao  |");
+			escreval("	|        voce ganhou!       |");
+			escreval("	|---------------------------|");
+			escreval("	|Pra quem esqueceu os primos|");
+			escreval("	|  2,3,5,7,11,13,17,19,...  |");
+			escreval("	|___________________________|");
+		senao
+			escreval("	|                           |");
+			escreval("	|  Se o numero fosse primo  |");
+			escreval("	|    voce teria ganhado!    |");
+			escreval("	|---------------------------|");
+			escreval("	|Pra quem esqueceu os primos|");
+			escreval("	|  2,3,5,7,11,13,17,19,...  |");
+			escreval("	|___________________________|");
+		fimSe
+		interrompa;
+	caso 24
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|___________NUMEROS_________|");
+		escreval("	|                           |");
+		escreval("	|Leia em voz alta :         |");
+		escreval("	|                           |");
+		escreval("	|  'Voce deve digitar um    |");
+		escreval("	|     numero de 1 a 20'     |");
+		escreva("	|");
+		leia(resp1);
+		se (resp1%2==0)entao
+			elim[nj]=1;
+			escreval("	|                           |");
+			escreval("	|   O numero é par entao  |");
+			escreval("	|        voce perdeu!       |");
+			escreval("	|---------------------------|");
+			escreval("	| Sim, isso foi totalmente  |");
+			escreval("	| aleatório! Da próxima vez |");
+			escreval("	| seja melhor.              |");
+			escreval("	|___________________________|");
+		senao
+			escreval("	|                           |");
+			escreval("	|  Se o numero fosse par    |");
+			escreval("	|    voce teria perdido!    |");
+			escreval("	|---------------------------|");
+			escreval("	| Sim, isso foi totalmente  |");
+			escreval("	| aleatório!                |");
+			escreval("	|___________________________|");
+		fimSe
+		interrompa;
+	caso 8
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|___________NUMEROS_________|");
+		escreval("	|                           |");
+		escreval("	|Leia em voz alta :         |");
+		escreval("	|                           |");
+		escreval("	|  'Voce deve digitar um    |");
+		escreval("	|     numero de 1 a 20'     |");
+		escreva("	|");
+		leia(resp1);
+		se (resp1%2==1)entao
+			elim[nj]=1;
+			escreval("	|                           |");
+			escreval("	|   O numero é ímpar entao  |");
+			escreval("	|        voce perdeu!       |");
+			escreval("	|---------------------------|");
+			escreval("	| Sim, isso foi totalmente  |");
+			escreval("	| aleatório! Da próxima vez |");
+			escreval("	| seja melhor.              |");
+			escreval("	|___________________________|");
+		senao
+			escreval("	|                           |");
+			escreval("	|  Se o numero fosse ímpar  |");
+			escreval("	|    voce teria perdido!    |");
+			escreval("	|---------------------------|");
+			escreval("	| Sim, isso foi totalmente  |");
+			escreval("	| aleatório!                |");
+			escreval("	|___________________________|");
+		fimSe
+		interrompa;
+	caso 6
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|___________PONTOS__________|");
+		escreval("	|                           |");
+		escreval("	|Esta carta vale + 8 pontos |");
+		escreval("	|                           |");
+		escreval("	|Qualquer jogador que chegar|");
+		escreval("	|a 15 pontos ganha!         |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|   - Receba!!              |");
+		escreval("	|   - Recebo.               |");
+		escreval("	|___________________________|");
+		pontos[nj]= pontos[nj]+8;
+		escreval("Parabens vc ganhou +8 pontos");
+		interrompa;
+	caso 27
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|___________PONTOS__________|");
+		escreval("	|                           |");
+		escreval("	|Esta carta vale + 8 pontos |");
+		escreval("	|                           |");
+		escreval("	|Qualquer jogador que chegar|");
+		escreval("	|a 15 pontos ganha!         |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|   - Receba!!              |");
+		escreval("	|   - Recebo.               |");
+		escreval("	|___________________________|");
+		pontos[nj]= pontos[nj]+8;
+		escreval("Parabens vc ganhou +8 pontos");
+		interrompa;
+	caso 15
+		escreval("	 ____________________________");
+		escreval("	|                            |");
+		escreval("	|______RISADA MALEFICA_______|");
+		escreval("	|                            |");
+		escreval("	|Toda vez que outro jogador  |");
+		escreval("	|perder, voce da uma risada  |");
+		escreval("	|malefica.                   |");
+		escreval("	|                            |");
+		escreval("	|E ganhe  +5  pontos por ser |");
+		escreval("	|do mal.                     |");
+		escreval("	|                            |");
+		escreval("	|----------------------------|");
+		escreval("	| Dominacao Global pew pew.  |");
+		escreval("	|Robos com laser nao inclusos|");
+		escreval("	|   Compre seperadamente !!  |");
+		escreval("	|____________________________|");
+		pontos[nj]=pontos[nj]+5;
+		escreval("Parabens vc ganhou +5 pontos");
+		interrompa;
+	caso 29
+		escreval("	 ___________________________");
+		escreval("	|        EMBOSCADA DO       |");
+		escreval("	|__________GATINHO__________|");
+		escreval("	|                           |");
+		escreval("	|Voce estava andando na rua |");
+		escreval("	|e 4 gatinhos te atacaram   |");
+		escreval("	|                           |");
+		escreval("	|Perca -4 pontos.           |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|Gatos Espacias colonizaram |");
+		escreval("	|     a terra em 2857.      |");
+		escreval("	|___________________________|");
+		pontos[nj]=pontos[nj]-4;
+		escreval("Infelizmente, vc perdeu -4 pontos");
+		interrompa;
+	caso 30
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|___________PERDI___________|");
+		escreval("	|                           |");
+		escreval("	|Se voce lembrou voce perdeu|");
+		escreval("	|                           |");
+		escreval("	|        É serio!!!         |");
+		escreval("	|   Voce lembrou? (s ou n)  |");
+		escreva("	|");
+		leiaCaracter(c);
+		c=maiusculoCaracter(c);
+		se (c=='N')entao
+			escreval("	|  Boa tentaiva, mas eu nao |");
+			escreval("	|      acredito em voce!    |");
+			escreval("	|  Infelizmente vc perdeu   |");
+			escreval("	|                           |");
+			escreval("	|---------------------------|");
+			escreval("	| Sim, isso foi totalmente  |");
+			escreval("	| aleatório! Da próxima vez |");
+			escreval("	| seja melhor.              |");
+			escreval("	|___________________________|");
+		senao
+			escreval("	|                           |");
+			escreval("	|  Infelizmente vc perdeu   |");
+			escreval("	|                           |");
+			escreval("	|---------------------------|");
+			escreval("	| Sim, isso foi totalmente  |");
+			escreval("	| aleatório!                |");
+			escreval("	|___________________________|");
+		fimSe
+		elim[nj]=1;
+		interrompa;
+	caso 31
+		escreval("	 ____________________________");
+		escreval("	|                            |");
+		escreval("	|__________ZUMBIS____________|");
+		escreval("	|                            |");
+		escreval("	|'AHH! Zumbis!', no final do |");
+		escreval("	|seu turno, os zumbis vão    |");
+		escreval("	|comer seu cérebro e voce    |");
+		escreval("	|perderá.                    |");
+		escreval("	|                            |");
+		escreval("	|A menos que voce tenha uma  |");
+		escreval("	|banana.                     |");
+		escreval("	|                            |");
+		escreval("	|                            |");
+		escreval("	|----------------------------|");
+		escreval("	|Zumbis tem medo de banana.  |");
+		escreval("	|Sao seus predadores naturais|");
+		escreval("	|____________________________|");
+		se(banana[nj]==0)entao
+			escreval("Voce perdeu");
+			elim[nj]=1;
+		senao
+			escreval("Voce tinha uma banana e por isso sobreviveu");
+			banana[nj]=banana[nj]-1;
+		fimSe
+		interrompa;
+
+	caso 32
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|__________SARCASMO_________|");
+		escreval("	|                           |");
+		escreval("	|Leia  para  algum  jogador:|");
+		escreval("	|Voce é incrivel!           |");
+		escreval("	|Todo mundo gosta de voce e |");
+		escreval("	|voce   ganha   um   bolo,  |");
+		escreval("	|presentes e ganha o jogo!  |");
+		escreval("	|                           |");
+		escreval("	|Haha so que nao.Voce perde |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	| Essa casa é tao original. |");
+		escreval("	|  É meu melhor trabalho.   |");
+		escreval("	|___________________________|");
+		escreval("");
+		escreval("Qual o numero do jogador que vc escolheu?");
+		leia(resp1);
+		elim[resp1-1]=1;
+		interrompa;
+	caso 13
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|___________O FIM___________|");
+		escreval("	|                           |");
+		escreval("	|No final do seu turno, todo|");
+		escreval("	|mundo perde.               |");
+		escreval("	|                           |");
+		escreval("	|Incluindo Você.            |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	|Para aqueles que pedem para|");
+		escreval("	|   acabar logo com isso.   |");
+		escreval("	|___________________________|");
+		elim[0]=1;
+		elim[1]=1;
+		elim[2]=1;
+		elim[3]=1;
+		elim[4]=1;
+		elim[5]=1;
+		interrompa;
+	outroCaso
+		escreval("	 ___________________________");
+		escreval("	|                           |");
+		escreval("	|__________CHEGADA__________|");
+		escreval("	|                           |");
+		escreval("	|Voce  chegou  ao  final  do|");
+		escreval("	|tabuleiro e por isso perde.|");
+		escreval("	|                           |");
+		escreval("	|A culpa nao eh sua mas vc  |");
+		escreval("	|teve tanta sorte nos dados |");
+		escreval("	|que chegou antes de todos  |");
+		escreval("	|                           |");
+		escreval("	|---------------------------|");
+		escreval("	| Essa semana eu vi 2 gatos |");
+		escreval("	|pretos na rua talvez tenha |");
+		escreval("	|     alguma relação...     |");
+		escreval("	|___________________________|");
+		elim[nj]=1;
+		interrompa;
+	fimEscolha
+	escreval("Voce agora tem : ",pontos[nj]," pontos");
+fimProcedimento
